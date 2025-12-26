@@ -13,15 +13,15 @@ interface UseTimerProps {
 export function useTimer({ durationMinutes, onTimeout, quizId }: UseTimerProps) {
     const storageKey = `quiz_timer_${quizId}`
     const [timeRemaining, setTimeRemaining] = useState<number>(() => {
-        // Try to restore from localStorage
-        if (typeof window === 'undefined') return durationMinutes * 60
+        if (typeof window === 'undefined' || quizId.includes('undefined') || durationMinutes <= 0) {
+            return durationMinutes * 60
+        }
 
         try {
             const stored = localStorage.getItem(storageKey)
             if (stored) {
-                const { endTime } = JSON.parse(stored)
-                const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000))
-                return remaining > 0 ? remaining : durationMinutes * 60
+                const { secondsLeft } = JSON.parse(stored)
+                return typeof secondsLeft === 'number' ? secondsLeft : durationMinutes * 60
             }
         } catch (error) {
             console.error('Error restoring timer:', error)
@@ -33,20 +33,12 @@ export function useTimer({ durationMinutes, onTimeout, quizId }: UseTimerProps) 
     const [isRunning, setIsRunning] = useState(true)
     const hasTimedOut = useRef(false)
 
-    // Initialize end time in localStorage
+    // Sync timeRemaining to localStorage whenever it changes
     useEffect(() => {
-        if (typeof window === 'undefined') return
-
-        try {
-            const stored = localStorage.getItem(storageKey)
-            if (!stored) {
-                const endTime = Date.now() + (durationMinutes * 60 * 1000)
-                localStorage.setItem(storageKey, JSON.stringify({ endTime }))
-            }
-        } catch (error) {
-            console.error('Error initializing timer:', error)
+        if (typeof window !== 'undefined' && !quizId.includes('undefined') && timeRemaining > 0) {
+            localStorage.setItem(storageKey, JSON.stringify({ secondsLeft: timeRemaining }))
         }
-    }, [durationMinutes, storageKey])
+    }, [timeRemaining, storageKey, quizId])
 
     // Countdown effect
     useEffect(() => {
@@ -54,12 +46,13 @@ export function useTimer({ durationMinutes, onTimeout, quizId }: UseTimerProps) 
 
         const interval = setInterval(() => {
             setTimeRemaining((prev) => {
-                const newTime = prev - 1
+                const newTime = Math.max(0, prev - 1)
 
                 // Check if time is up
-                if (newTime <= 0 && !hasTimedOut.current) {
+                if (newTime === 0 && !hasTimedOut.current) {
                     hasTimedOut.current = true
                     clearInterval(interval)
+                    localStorage.removeItem(storageKey)
                     // Defer callback to avoid setState during render
                     setTimeout(() => onTimeout(), 0)
                     return 0
@@ -70,7 +63,7 @@ export function useTimer({ durationMinutes, onTimeout, quizId }: UseTimerProps) 
         }, 1000)
 
         return () => clearInterval(interval)
-    }, [isRunning, onTimeout, timeRemaining])
+    }, [isRunning, onTimeout, timeRemaining, storageKey])
 
     const clearTimer = () => {
         try {

@@ -4,7 +4,6 @@ import { useState, useEffect, use, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EmailModal from "@/components/EmailModal"
-import Navbar from "@/components/Navbar"
 import BackButton from "@/components/BackButton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -66,9 +65,7 @@ export default function QuizStartPage({ params }: QuizStartPageProps) {
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
-            <Navbar />
-
-            <main className="md:ml-64 px-4 py-6 md:py-12 pt-16 md:pt-12 w-auto">
+            <main className="px-4 py-6 md:py-12 pt-16 md:pt-12 w-auto">
                 <div className="max-w-3xl mx-auto">
                     {/* Back Button */}
                     <BackButton href={`/quiz/${topic}`} label="Back to Difficulty Selection" />
@@ -92,7 +89,7 @@ export default function QuizStartPage({ params }: QuizStartPageProps) {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-sm text-muted-foreground">Estimated Time</p>
-                                    <p className="text-2xl font-bold text-primary">25 min</p>
+                                    <p className="text-2xl font-bold text-primary">15 min</p>
                                 </div>
                             </div>
 

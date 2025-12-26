@@ -3,8 +3,8 @@
 import { useState, useEffect, use, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Navbar from "@/components/Navbar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useNavbar } from "@/context/navbar-context"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -32,22 +32,34 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
     const [warningMessage, setWarningMessage] = useState("")
     const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true)
     const [isFullscreen, setIsFullscreen] = useState(false)
+    // Resume count removed
     const hasStartedQuizRef = useRef(false)
     const isOpeningExternalLinkRef = useRef(false)
     const quizContainerRef = useRef<HTMLDivElement>(null)
+    const { setIsVisible } = useNavbar()
 
     const { topic, difficulty } = use(params)
     const QUESTIONS = QUIZ_DATA[topic]?.[difficulty] || []
 
-    // Timer (15 minutes)
+    // Calculate timer duration based on question count
+    // Base: 20 questions = 15 minutes (0.75 min per question)
+    const questionCount = QUESTIONS.length
+    const durationMinutes = Math.ceil((questionCount * 0.75)) // 0.75 minutes per question
+
+    // Timer
     const timer = useTimer({
-        durationMinutes: 15,
+        durationMinutes: durationMinutes,
         onTimeout: () => {
-            toast.warning("Time's Up!", {
-                description: 'Your quiz will be auto-submitted',
-            })
-            // Auto-submit when time runs out
-            handleAutoSubmit()
+            // Only auto-submit if the quiz has actually started
+            if (hasStartedQuizRef.current) {
+                console.log('[Quiz] ⏱️ Timer timed out! Auto-submitting...')
+                toast.warning("Time's Up!", {
+                    description: 'Your quiz will be auto-submitted',
+                })
+                handleAutoSubmit()
+            } else {
+                console.log('[Quiz] ⏱️ Timer timed out but quiz not active. Skipping auto-submit.')
+            }
         },
         quizId: `${topic}_${difficulty}`,
     })
@@ -92,18 +104,25 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
             setIsFullscreen(isCurrentlyFullscreen)
 
             if (!isCurrentlyFullscreen && hasStartedQuizRef.current) {
-                setSubmittedAnswers({})
-                setCurrentQuestion(0)
-                setScore(0)
-                setShowFeedback(false)
-                setSelectedAnswer(null)
+                // DO NOT clear timer - let it persist so user can resume with remaining time
+                // timer.clearTimer() // REMOVED - timer should continue
 
-                setWarningMessage(
-                    "⚠️ QUIZ RESTARTED: You exited fullscreen mode. All progress cleared."
+
+
+                // SAVE current progress instead of resetting
+                // This allows user to resume from where they left off
+                saveProgress(submittedAnswers, score, currentQuestion).catch((err: any) =>
+                    console.error("Failed to save progress on fullscreen exit", err)
                 )
+
+                setIsVisible(!isCurrentlyFullscreen)
                 setShowWarning(true)
-                setShowFullscreenPrompt(true)
+                // We keep showFullscreenPrompt false until the user acknowledges the warning
+                // to avoid flickering and focus theft
                 hasStartedQuizRef.current = false
+            } else {
+                // If we are in fullscreen, hide navbar. If not, show it.
+                setIsVisible(!isCurrentlyFullscreen)
             }
         }
 
@@ -115,21 +134,23 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
             }
 
             if (document.hidden && hasStartedQuizRef.current) {
-                setSubmittedAnswers({})
-                setCurrentQuestion(0)
-                setScore(0)
-                setShowFeedback(false)
-                setSelectedAnswer(null)
+                // DO NOT clear timer - let it persist so user can resume with remaining time
+                // timer.clearTimer() // REMOVED - timer should continue
+
+
+
+                // SAVE current progress instead of resetting
+                saveProgress(submittedAnswers, score, currentQuestion).catch((err: any) =>
+                    console.error("Failed to save progress on tab switch", err)
+                )
 
                 if (document.fullscreenElement) {
                     document.exitFullscreen()
                 }
 
-                setWarningMessage(
-                    "⚠️ QUIZ RESTARTED: Tab switching detected. All progress cleared."
-                )
+                setIsVisible(true) // Show navbar so they see it when they return
                 setShowWarning(true)
-                setShowFullscreenPrompt(true)
+                // Same logic as fullscreen exit
                 hasStartedQuizRef.current = false
             }
         }
@@ -143,6 +164,7 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
             document.removeEventListener("fullscreenchange", handleFullscreenChange)
             document.removeEventListener("visibilitychange", handleVisibilityChange)
 
+            setIsVisible(true)
             if (document.fullscreenElement) {
                 document.exitFullscreen()
             }
@@ -199,6 +221,12 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
 
     const saveProgress = async (newAnswers: Record<number, number>, newScore: number, newQuestionIndex: number) => {
         try {
+            if (Object.keys(newAnswers).length === 0 && newQuestionIndex === 0 && newScore === 0) {
+                console.log('[Quiz] ❌ Skipping save - no progress to save')
+                return
+            }
+
+            console.log('[Quiz] ✅ Saving progress to database...')
             await fetch('/api/progress', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -209,8 +237,9 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
                     score: newScore
                 })
             })
+            console.log('[Quiz] ✅ Progress saved successfully')
         } catch (error) {
-            console.error("Failed to save progress", error)
+            console.error("[Quiz] ❌ Failed to save progress", error)
         }
     }
 
@@ -254,10 +283,16 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
     }
 
     const finishQuiz = async () => {
+        console.log('[Quiz] 🏁 Finishing quiz...')
+        // Mark as finished to prevent violation warnings
+        hasStartedQuizRef.current = false
+        setIsVisible(true)
+
         // Quiz complete - save results and navigate
         sessionStorage.setItem("quiz_score", score.toString())
         sessionStorage.setItem("quiz_total", QUESTIONS.length.toString())
         sessionStorage.setItem("quiz_answers", JSON.stringify(submittedAnswers))
+
 
 
         if (document.fullscreenElement) {
@@ -290,8 +325,7 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
     if (!question) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <Navbar />
-                <div className="md:ml-64 px-4 pt-16 md:pt-0">
+                <div className="px-4 pt-16 md:pt-0">
                     <p className="text-primary">Quiz not found</p>
                 </div>
             </div>
@@ -313,9 +347,7 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
             onContextMenu={handleContextMenu}
             onDragStart={(e) => e.preventDefault()}
         >
-            {!isFullscreen && <Navbar />}
-
-            <main className={!isFullscreen ? "md:ml-64 px-4 py-6 md:py-8 pt-16 md:pt-8 w-auto" : "container mx-auto px-4 py-6 md:py-8"}>
+            <main className="px-4 py-6 md:py-8 pt-16 md:pt-8 w-auto">
                 <div className="max-w-3xl mx-auto">
                     {showFullscreenPrompt && (
                         <Card className="border-border bg-muted mb-6">
@@ -330,8 +362,8 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
                                     <p>⚠️ <strong>Quiz Rules:</strong></p>
                                     <ul className="list-disc list-inside space-y-1 ml-4">
                                         <li>Quiz must be in fullscreen</li>
-                                        <li>Exiting fullscreen restarts quiz</li>
-                                        <li>Switching tabs restarts quiz</li>
+                                        <li>Exiting fullscreen saves progress (resume anytime)</li>
+                                        <li>Switching tabs saves progress (resume anytime)</li>
                                         <li>Once submitted, answers are final</li>
                                     </ul>
                                 </div>
@@ -354,6 +386,7 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
                                         variant="ghost"
                                         className="border border-border text-foreground hover:bg-muted bg-card"
                                         onClick={() => {
+                                            hasStartedQuizRef.current = false
                                             if (document.fullscreenElement) {
                                                 document.exitFullscreen()
                                             }
@@ -536,7 +569,10 @@ export default function QuizPlayPage({ params }: QuizPlayPageProps) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogAction
-                            onClick={() => setShowWarning(false)}
+                            onClick={() => {
+                                setShowWarning(false)
+                                setShowFullscreenPrompt(true)
+                            }}
                             className="bg-primary text-primary-foreground font-bold"
                         >
                             I Understand

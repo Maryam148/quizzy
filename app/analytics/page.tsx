@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import Navbar from "@/components/Navbar"
 import BackButton from "@/components/BackButton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -36,8 +35,7 @@ export default function AnalyticsPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-background overflow-x-hidden">
-                <Navbar />
-                <div className="md:ml-64 p-6 pt-20 w-auto">
+                <div className="p-6 pt-20 w-auto">
                     <div className="max-w-6xl mx-auto">
                         <BackButton />
                         <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-foreground">Analytics Dashboard</h1>
@@ -61,8 +59,7 @@ export default function AnalyticsPage() {
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
-            <Navbar />
-            <div className="md:ml-64 p-6 pt-20 w-auto">
+            <div className="p-6 pt-20 w-auto">
                 <div className="max-w-6xl mx-auto">
                     <BackButton />
                     <div className="mb-6 md:mb-8 text-center">
@@ -74,7 +71,7 @@ export default function AnalyticsPage() {
 
                     {/* Stats Overview */}
                     <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4 mb-6 md:mb-8">
-                        <Card>
+                        <Card className="glass-card">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
                                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -87,7 +84,7 @@ export default function AnalyticsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="glass-card">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">Topics Tracked</CardTitle>
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -100,7 +97,7 @@ export default function AnalyticsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="glass-card">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">Avg Score</CardTitle>
                                 <Award className="h-4 w-4 text-muted-foreground" />
@@ -117,7 +114,7 @@ export default function AnalyticsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="glass-card">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">Avg Time</CardTitle>
                                 <Clock className="h-4 w-4 text-muted-foreground" />
@@ -136,7 +133,7 @@ export default function AnalyticsPage() {
                     </div>
 
                     {/* Topic Performance */}
-                    <Card className="mb-8">
+                    <Card className="mb-8 glass-card">
                         <CardHeader>
                             <CardTitle>Topic Performance</CardTitle>
                             <CardDescription>Average scores and completion times by topic</CardDescription>
@@ -184,7 +181,7 @@ export default function AnalyticsPage() {
                     </Card>
 
                     {/* Recent Completions */}
-                    <Card>
+                    <Card className="glass-card">
                         <CardHeader>
                             <CardTitle>Recent Completions</CardTitle>
                             <CardDescription>Latest quiz submissions</CardDescription>

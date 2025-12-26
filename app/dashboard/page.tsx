@@ -1,8 +1,12 @@
-import { createClient } from "@/lib/supabase/server"
-import Navbar from '@/components/Navbar'
+"use client"
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import ActiveQuizCard from '@/components/active-quiz-card'
+import { createClient } from '@/lib/supabase/client'
 import { QUIZ_DATA } from "@/lib/quiz-data"
 
 const QUIZ_TOPICS = [
@@ -11,74 +15,97 @@ const QUIZ_TOPICS = [
         title: 'React',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
     },
     {
         id: 'javascript',
         title: 'JavaScript',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
     },
     {
         id: 'typescript',
         title: 'TypeScript',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
     },
     {
         id: 'nextjs',
         title: 'Next.js',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
     },
     {
         id: 'nodejs',
         title: 'Node.js',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
     },
     {
         id: 'nestjs',
         title: 'NestJS',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
     },
     {
         id: 'mongodb',
         title: 'MongoDB',
         description: '3 difficulty levels: Basics, Intermediate, Advanced',
         questionCount: 60,
-        estimatedTime: '75 min total'
+        estimatedTime: '45 min total (15 min each)'
+    },
+    {
+        id: 'express',
+        title: 'Express.js',
+        description: '3 difficulty levels: Basics, Intermediate, Advanced',
+        questionCount: 60,
+        estimatedTime: '45 min total (15 min each)'
     }
 ]
 
-export default async function DashboardPage() {
-    const supabase = await createClient()
+export default function DashboardPage() {
+    const [activeQuizzes, setActiveQuizzes] = useState<any[]>([])
+    const [loading, setLoading] = useState(false) // Start as false for faster initial render
+    const [hasFetched, setHasFetched] = useState(false)
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    useEffect(() => {
+        // Only fetch if we haven't fetched yet
+        if (hasFetched) return
 
-    // Fetch active progress
-    let activeQuizzes: any[] = []
-    if (user) {
-        const { data } = await supabase
-            .from('quiz_progress')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('last_updated', { ascending: false })
+        const fetchActiveQuizzes = async () => {
+            setLoading(true)
+            try {
+                const supabase = createClient()
+                const { data: { user } } = await supabase.auth.getUser()
 
-        activeQuizzes = data || []
-    }
+                if (user) {
+                    const { data } = await supabase
+                        .from('quiz_progress')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('last_updated', { ascending: false })
+
+                    setActiveQuizzes(data || [])
+                    setHasFetched(true)
+                }
+            } catch (error) {
+                console.error('Error fetching active quizzes:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchActiveQuizzes()
+    }, [hasFetched])
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
-            <Navbar />
-            <main className="md:ml-64 px-4 py-8 md:py-12 pt-20 w-auto">
+            <main className="px-4 py-8 md:py-12 pt-20 w-auto">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="mb-8 md:mb-12 text-center">
@@ -90,27 +117,30 @@ export default async function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* Active Quizzes Section */}
-                    {activeQuizzes.length > 0 && (
-                        <div className="mb-12">
-                            <div className="flex items-center gap-2 mb-6">
-                                <span className="h-8 w-1 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
-                                <h2 className="text-2xl font-bold text-foreground tracking-tight">
-                                    In Progress
-                                </h2>
+                    {/* Active Quizzes Section - Always show, use skeleton when loading */}
+                    <div className="mb-12">
+                        <div className="flex items-center gap-2 mb-6">
+                            <span className="h-8 w-1 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+                            <h2 className="text-2xl font-bold text-foreground tracking-tight">
+                                In Progress
+                            </h2>
+                        </div>
+
+                        {loading ? (
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="glass-card border-l-4 border-l-primary p-6 animate-pulse">
+                                        <div className="h-6 bg-muted rounded w-3/4 mb-4"></div>
+                                        <div className="h-4 bg-muted rounded w-1/2 mb-6"></div>
+                                        <div className="h-10 bg-muted rounded"></div>
+                                    </div>
+                                ))}
                             </div>
+                        ) : activeQuizzes.length > 0 ? (
                             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                 {activeQuizzes.map((quiz) => {
-                                    // Parse quiz_id (format: "topic_difficulty")
                                     const [topic, difficulty] = quiz.quiz_id.split('_')
-
-                                    // Calculate progress percentage
                                     const answeredCount = quiz.answers ? Object.keys(quiz.answers).length : 0
-
-                                    // Get accurate total questions from QUIZ_DATA
-                                    // Use 'as any' to avoid potentially strict typing issues with dynamic keys for this quick fix, 
-                                    // though using the proper type would be better if we imported it.
-                                    // Importing QUIZ_DATA at the file level is cleaner.
                                     const totalQuestions = (QUIZ_DATA as any)[topic]?.[difficulty]?.length || 20
 
                                     return (
@@ -122,12 +152,20 @@ export default async function DashboardPage() {
                                             progress={(answeredCount / totalQuestions) * 100}
                                             totalQuestions={totalQuestions}
                                             answeredCount={answeredCount}
+                                            onReset={(id) => {
+                                                setActiveQuizzes(prev => prev.filter(q => q.quiz_id !== id))
+                                            }}
                                         />
                                     )
                                 })}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="text-center py-12 glass-card rounded-xl border border-dashed border-muted-foreground/20">
+                                <p className="text-muted-foreground text-lg italic">Nothing in progress</p>
+                                <p className="text-xs text-muted-foreground/60 mt-2">Start a new quiz below to track your progress</p>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Quiz Topics Grid */}
                     <div className="flex items-center gap-2 mb-6">
@@ -159,8 +197,8 @@ export default async function DashboardPage() {
                             </Link>
                         ))}
                     </div>
-                </div>
-            </main>
-        </div>
+                </div >
+            </main >
+        </div >
     )
 }

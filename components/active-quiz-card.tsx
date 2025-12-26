@@ -14,9 +14,10 @@ interface ActiveQuizProps {
     progress: number
     totalQuestions: number
     answeredCount: number
+    onReset?: (quizId: string) => void
 }
 
-export default function ActiveQuizCard({ quizId, topic, difficulty, progress, totalQuestions, answeredCount }: ActiveQuizProps) {
+export default function ActiveQuizCard({ quizId, topic, difficulty, progress, totalQuestions, answeredCount, onReset }: ActiveQuizProps) {
     const router = useRouter()
 
     // Parse topic/diff cleanly for display
@@ -27,6 +28,7 @@ export default function ActiveQuizCard({ quizId, topic, difficulty, progress, to
         try {
             await fetch(`/api/progress?quizId=${quizId}`, { method: 'DELETE' })
             toast.success("Progress reset", { description: "You can now start fresh." })
+            if (onReset) onReset(quizId)
             router.refresh()
         } catch (error) {
             toast.error("Failed to reset")

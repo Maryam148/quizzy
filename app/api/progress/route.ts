@@ -41,18 +41,25 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const { quizId, currentQuestionIndex, answers, score } = body
 
+        console.log('[Progress API] POST request:', { quizId, currentQuestionIndex, score })
+
         if (!quizId) {
+            console.error('[Progress API] Missing quizId')
             return NextResponse.json({ error: 'Missing quizId' }, { status: 400 })
         }
 
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
+        console.log('[Progress API] User:', user?.id || 'Not authenticated')
+
         if (!user) {
+            console.error('[Progress API] User not authenticated')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         // Upsert progress
+        console.log('[Progress API] Attempting to save progress...')
         const { data, error } = await supabase
             .from('quiz_progress')
             .upsert({
@@ -69,10 +76,11 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (error) {
-            console.error('Error saving progress:', error)
-            return NextResponse.json({ error: 'Failed to save progress' }, { status: 500 })
+            console.error('[Progress API] Error saving progress:', error)
+            return NextResponse.json({ error: 'Failed to save progress', details: error.message }, { status: 500 })
         }
 
+        console.log('[Progress API] Progress saved successfully:', data)
         return NextResponse.json({ success: true, data })
     } catch (error) {
         console.error('Error in progress POST:', error)

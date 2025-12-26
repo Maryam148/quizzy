@@ -3,7 +3,6 @@
 import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Navbar from "@/components/Navbar"
 import BackButton from "@/components/BackButton"
 import { AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -35,6 +34,7 @@ export default function QuizResultsPage({ params }: QuizResultsPageProps) {
     const [score, setScore] = useState(0)
     const [total, setTotal] = useState(0)
     const [percentage, setPercentage] = useState(0)
+    const [resumeCount, setResumeCount] = useState(0)
 
     const { topic, difficulty } = use(params)
 
@@ -44,6 +44,7 @@ export default function QuizResultsPage({ params }: QuizResultsPageProps) {
         const storedTotal = sessionStorage.getItem("quiz_total")
         const storedTopic = sessionStorage.getItem("quiz_topic")
         const storedDifficulty = sessionStorage.getItem("quiz_difficulty")
+        const storedResumeCount = sessionStorage.getItem("quiz_resume_count")
 
         if (!storedEmail || !storedScore || !storedTotal || !storedTopic || !storedDifficulty) {
             router.push(`/quiz/${topic}/${difficulty}`)
@@ -57,6 +58,7 @@ export default function QuizResultsPage({ params }: QuizResultsPageProps) {
         setScore(scoreNum)
         setTotal(totalNum)
         setPercentage(Math.round((scoreNum / totalNum) * 100))
+        setResumeCount(storedResumeCount ? parseInt(storedResumeCount) : 0)
 
         const sendEmails = async () => {
             try {
@@ -98,9 +100,7 @@ export default function QuizResultsPage({ params }: QuizResultsPageProps) {
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
-            <Navbar />
-
-            <main className="md:ml-64 px-4 py-6 md:py-12 pt-16 md:pt-12 w-auto">
+            <main className="px-4 py-6 md:py-12 pt-16 md:pt-12 w-auto">
                 <div className="max-w-3xl mx-auto">
                     <BackButton href={`/quiz/${topic}`} label="Back to Quiz" />
 
@@ -140,10 +140,15 @@ export default function QuizResultsPage({ params }: QuizResultsPageProps) {
                             </div>
 
                             {/* Email Confirmation */}
-                            <div className="rounded-lg border border-border bg-muted p-4">
+                            <div className="rounded-lg border border-border bg-muted p-4 space-y-2">
                                 <p className="text-sm text-foreground text-center">
                                     📧 Results sent to: <span className="font-semibold text-primary">{email}</span>
                                 </p>
+                                {resumeCount > 0 && (
+                                    <p className="text-xs text-muted-foreground text-center">
+                                        ♻️ Completed in <span className="font-semibold text-primary">{resumeCount + 1}</span> {resumeCount + 1 === 1 ? 'attempt' : 'attempts'}
+                                    </p>
+                                )}
                             </div>
                         </CardContent>
                         <CardFooter>

@@ -3,7 +3,6 @@
 import { use, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Navbar from "@/components/Navbar"
 import BackButton from "@/components/BackButton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -78,9 +77,7 @@ export default function DifficultySelection({ params }: DifficultySelectionProps
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
-            <Navbar />
-
-            <main className="md:ml-64 px-4 py-6 md:py-12 pt-16 md:pt-12 w-auto">
+            <main className="px-4 py-6 md:py-12 pt-16 md:pt-12 w-auto">
                 <div className="max-w-5xl mx-auto">
                     {/* Back Button */}
                     <BackButton href="/dashboard" label="Back to Dashboard" />
@@ -118,7 +115,7 @@ export default function DifficultySelection({ params }: DifficultySelectionProps
                                 <CardContent className="text-center">
                                     <div className="space-y-2 mb-4">
                                         <p className="text-sm text-muted-foreground">20 Questions</p>
-                                        <p className="text-sm text-muted-foreground">≈ 25 minutes</p>
+                                        <p className="text-sm text-muted-foreground">≈ 15 minutes</p>
                                     </div>
                                     <Button
                                         className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 hover:scale-105 transition-all"

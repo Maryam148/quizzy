@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Navbar from "@/components/Navbar"
 import BackButton from "@/components/BackButton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -58,8 +57,7 @@ export default function LeaderboardPage() {
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden">
-            <Navbar />
-            <div className="md:ml-64 p-6 pt-20 w-auto">
+            <div className="p-6 pt-20 w-auto">
                 <div className="max-w-6xl mx-auto space-y-6">
                     <BackButton />
                     <div className="mb-6 md:mb-8 text-center">
@@ -70,7 +68,7 @@ export default function LeaderboardPage() {
                     </div>
 
                     {/* Filters */}
-                    <Card className="mb-6">
+                    <Card className="mb-6 glass-card">
                         <CardHeader>
                             <CardTitle>Filters</CardTitle>
                             <CardDescription>Filter leaderboard by topic and difficulty</CardDescription>
@@ -110,7 +108,7 @@ export default function LeaderboardPage() {
                     </Card>
 
                     {/* Leaderboard Table */}
-                    <Card>
+                    <Card className="glass-card">
                         <CardHeader>
                             <CardTitle>Top Scores</CardTitle>
                             <CardDescription>

@@ -75,7 +75,14 @@ export default function Navbar() {
 
             {/* Navigation Links */}
             <div className="flex-1 px-4 py-6 space-y-2">
-                {user ? (
+                {loading ? (
+                    // Show skeleton/loading state instead of nothing
+                    <div className="space-y-2">
+                        <div className="h-10 bg-muted/50 rounded-md animate-pulse" />
+                        <div className="h-10 bg-muted/50 rounded-md animate-pulse" />
+                        <div className="h-10 bg-muted/50 rounded-md animate-pulse" />
+                    </div>
+                ) : user ? (
                     <>
                         <Link href="/dashboard" prefetch={true} onClick={() => setMobileMenuOpen(false)} className={pathname === '/dashboard' ? 'pointer-events-none' : ''}>
                             <Button variant="ghost" className={navLinkClass('/dashboard')}>
@@ -110,7 +117,7 @@ export default function Navbar() {
             </div>
 
             {/* Logout at the bottom */}
-            {user && (
+            {!loading && user && (
                 <div className="px-4 py-4 border-t border-border">
                     <Button
                         variant="ghost"

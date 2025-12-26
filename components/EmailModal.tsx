@@ -85,9 +85,10 @@ export default function EmailModal({ open, onClose, onSubmit, quizTopic }: Email
 
                 <DialogFooter>
                     <Button
+                        type="button"
                         variant="outline"
                         onClick={onClose}
-                        className="border-border text-foreground hover:bg-muted"
+                        className="border-border hover:bg-muted text-foreground hover:text-foreground"
                     >
                         Cancel
                     </Button>
