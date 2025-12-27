@@ -10,7 +10,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     const { isVisible } = useNavbar()
 
     // Routes where the Navbar should be hidden entirely
-    const hideNavbarRoutes = ['/login', '/signup', '/forgot-password', '/reset-password', '/test-env']
+    const hideNavbarRoutes = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/test-env']
     const isAuthRoute = hideNavbarRoutes.includes(pathname)
 
     // Check if Navbar should be visible based on context and route
