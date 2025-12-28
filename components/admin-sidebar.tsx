@@ -8,10 +8,7 @@ import { cn } from "@/lib/utils"
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: Users, label: "Candidates", href: "/admin/candidates" },
-    { icon: FileText, label: "Assessments", href: "/admin/assessments" },
-    { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
+    { icon: Users, label: "Interns", href: "/admin/interns" },
 ]
 
 export function AdminSidebar() {

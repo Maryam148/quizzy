@@ -112,3 +112,62 @@ export interface LeaderboardSubmission {
   totalQuestions: number;
   timeTakenSeconds: number;
 }
+
+// Admin Panel Types
+export interface AdminStats {
+  totalInterns: number;
+  activeInterns: number;
+  totalSubmissions: number;
+  completedSubmissions: number;
+  averageScore: number;
+  completionRate: number;
+  todaySubmissions: number;
+  hourlyRates: number[];
+}
+
+export interface InternWithStats extends Profile {
+  quizzesCompleted: number;
+  quizzesInProgress: number;
+  averageScore: number;
+  lastActiveAt: string | null;
+}
+
+export interface InternDetail extends InternWithStats {
+  highestScore: number;
+  lowestScore: number;
+  totalTimeSpent: number;
+}
+
+export interface QuizProgress {
+  id: string;
+  user_id: string;
+  quiz_id: string;
+  current_question_index: number;
+  answers: Record<string, number>;
+  score: number;
+  last_updated: string;
+}
+
+export interface TopPerformer {
+  rank: number;
+  id: string;
+  username: string;
+  email?: string;
+  topic: string;
+  difficulty: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  timeTakenSeconds: number;
+  createdAt: string;
+}
+
+export interface TopByAverage {
+  rank: number;
+  id: string;
+  email: string;
+  fullName: string;
+  averageScore: number;
+  quizzesCompleted: number;
+  weightedScore: number;
+}
