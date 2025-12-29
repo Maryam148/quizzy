@@ -13,18 +13,24 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        let query = supabase
+        const baseQuery = supabase
             .from('quiz_progress')
             .select('*')
             .eq('user_id', user.id)
 
         if (quizId) {
-            query = query.eq('quiz_id', quizId).single()
+            const { data, error } = await baseQuery.eq('quiz_id', quizId).single()
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching progress:', error)
+                return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 })
+            }
+            return NextResponse.json({ data })
         }
 
-        const { data, error } = await query
+        const { data, error } = await baseQuery
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows found" for single()
+        if (error) {
             console.error('Error fetching progress:', error)
             return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 })
         }
